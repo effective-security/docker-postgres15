@@ -1,0 +1,5 @@
+[sql-localrepo]
+name=Local Postgres SQL 15
+baseurl=file:///sql-localrepo
+enabled=1
+gpgcheck=0

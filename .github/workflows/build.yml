@@ -1,0 +1,85 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*"
+  pull_request:
+
+env:
+  EVENT_NUMBER: ${{ github.event.number }}
+  ITEST_IMAGE_TAG: rc-${{ github.event.number }}
+  COMMIT_SHA: ${{ github.event.pull_request.head.sha }}
+  # A unique number for each workflow run within a repository.
+  # This number does not change if you re-run the workflow run.
+  RUN_ID: ${{ github.run_id }}
+  # A unique number for each run of a particular workflow in a repository.
+  # This number begins at 1 for the workflow's first run, and increments with each new run.
+  # This number does not change if you re-run the workflow run.
+  RUN_NUMBER: ${{ github.run_number }}
+  # A unique number for each attempt of a particular workflow run in a repository.
+  # This number begins at 1 for the workflow run's first attempt, and increments with each re-run.
+  RUN_ATTEMPT: ${{ github.run_attempt }}
+  PULL_NUMBER: ${{ github.event.pull_request.number }}
+  # NOTE(epk) this identifier is used to easily bust a pre-existing go
+  # mod/build cache. To do so simply increment this number.
+  GO_CACHE_BUSTER: 5
+
+jobs:
+  TestAndDeploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Fetch History
+        run: |
+          git fetch --prune --unshallow
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to Registry
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Cache Docker layers
+        uses: actions/cache@v3
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: Docker meta
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          # list of Docker images to use as base name for tags
+          images: |
+            effectivesecurity/postgres15
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=sha
+
+      - name: Docker trusty docker/build-push-action@v3
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        id: docker_build
+        uses: docker/build-push-action@v3.1.1
+        with:
+          file: ./Dockerfile
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
