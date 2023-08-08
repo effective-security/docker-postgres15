@@ -28,7 +28,7 @@ RUN dnf -y install glibc-all-langpacks langpacks-en
 RUN dnf install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
 # Need to disable the built-in PostgreSQL module for OS version 8 and 9:
 RUN dnf -qy module disable postgresql
-RUN dnf install -y postgresql15-server
+RUN dnf install -y postgresql15-server postgresql15-contrib
 
 # Cleanup
 RUN dnf -y clean all && dnf update -y
