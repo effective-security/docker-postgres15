@@ -56,7 +56,7 @@ echo "run server"
 echo "config: ${PG_CONFDIR}/postgresql.conf"
 echo "port: ${PGPORT}"
 echo "data: ${PGDATA}"
-su postgres -c 'postgres -c config_file=$PG_CONFDIR/postgresql.conf -D ${PGDATA} -p ${PGPORT}'
+su postgres -c 'postgres -c config_file=$PG_CONFDIR/postgresql.conf -D ${PGDATA} -p ${PGPORT} ${PG_EXTRA_OPTS}'
 }
 
 # Call all functions

@@ -7,7 +7,7 @@ Docker images for Postgres SQL
 To build the image
 
 ```.sh
-docker build --no-cache --progress=plain -t effectivesecurity/postgres15 .
+docker build --no-cache --progress=plain -t effectivesecurity/postgres15:latest .
 ```
 
 ## Creating a database at launch
