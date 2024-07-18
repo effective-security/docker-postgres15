@@ -44,6 +44,7 @@ RUN chmod a+x /usr/bin/* && \
     chmod a+x /start_postgres.sh && \
     chown -R postgres.postgres /var/lib/pgsql && \
     chown postgres.postgres /start_postgres.sh && \
+    echo "host    all             all             ::1/128                 trust" >> /var/lib/pgsql/pg_hba.conf && \
     echo "host    all             all             0.0.0.0/0               trust" >> /var/lib/pgsql/pg_hba.conf
 
 RUN /usr/bin/postgresql-setup.sh initdb || cat /var/lib/pgsql/initdb.log
